@@ -8,7 +8,7 @@
 ## ⚙️ Installation
 Installation is done using the [`boss install`](https://github.com/HashLoad/boss) command:
 ``` sh
-$ boss install horse-basic-auth
+boss install horse-basic-auth
 ```
 If you choose to install manually, simply add the following folders to your project, in *Project > Options > Resource Compiler > Directories and Conditionals > Include file search path*
 ```
@@ -20,7 +20,7 @@ This middleware is compatible with projects developed in:
 - [X] Delphi
 - [X] Lazarus
 
-## ⚡️ Quickstart
+## ⚡️ Quickstart Delphi
 ```delphi
 uses 
   Horse, 
@@ -51,6 +51,46 @@ begin
 
   THorse.Listen(9000);
 end;
+```
+
+## ⚡️ Quickstart Lazarus
+```delphi
+{$MODE DELPHI}{$H+}
+
+uses
+  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  cthreads,
+  {$ENDIF}{$ENDIF}
+  Horse,
+  Horse.BasicAuthentication, // It's necessary to use the unit
+  SysUtils;
+
+procedure GetPing(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+begin
+  Res.Send('Pong');
+end;
+
+function DoLogin(const AUsername, APassword: string): Boolean;
+begin
+  // Here inside you can access your database and validate if username and password are valid
+  Result := AUsername.Equals('user') and APassword.Equals('password');
+end;
+
+begin
+  // It's necessary to add the middleware in the Horse:
+  THorse.Use(HorseBasicAuthentication(DoLogin));
+
+  // The default header for receiving credentials is "Authorization".
+  // You can change, if necessary:
+  // THorse.Use(HorseBasicAuthentication(MyCallbackValidation, THorseBasicAuthenticationConfig.New.Header('X-My-Header-Authorization')));
+
+  // You can also ignore routes:
+  // THorse.Use(HorseBasicAuthentication(MyCallbackValidation, THorseBasicAuthenticationConfig.New.SkipRoutes(['/ping'])));
+
+  THorse.Get('/ping', GetPing);
+
+  THorse.Listen(9000);
+end.
 ```
 
 ## 📌 Status Code
