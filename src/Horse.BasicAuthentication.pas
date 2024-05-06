@@ -13,6 +13,7 @@ uses
   Classes,
 {$ELSE}
   System.SysUtils,
+  System.StrUtils,
   System.NetEncoding,
   System.Classes,
 {$ENDIF}
@@ -101,12 +102,8 @@ var
   LBase64String: string;
   LBasicAuthenticationDecode: TStringList;
   LIsAuthenticated: Boolean;
-  LPathInfo: string;
 begin
-  LPathInfo := Req.RawWebRequest.PathInfo;
-  if LPathInfo = EmptyStr then
-    LPathInfo := '/';
-  if MatchRoute(LPathInfo, Config.SkipRoutes) then
+  if MatchText(Req.RawWebRequest.PathInfo, Config.SkipRoutes) then
   begin
     Next();
     Exit;
