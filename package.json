@@ -1,8 +1,9 @@
 {
   "name": "horse-basic-auth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
-  "repository": "https://github.com/solussaude/horse-basic-auth",
+  "repository": "https://github.com/solussaude/horse-basic-auth.git",
   "license": "MIT",
-  "packageManager": "yarn@4.0.2"
+  "packageManager": "yarn@4.0.2",
+  "private": true
 }
