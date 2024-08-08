@@ -13,6 +13,7 @@ uses
   Classes,
 {$ELSE}
   System.SysUtils,
+  System.StrUtils,
   System.NetEncoding,
   System.Classes,
 {$ENDIF}
@@ -101,12 +102,8 @@ var
   LBase64String: string;
   LBasicAuthenticationDecode: TStringList;
   LIsAuthenticated: Boolean;
-  LPathInfo: string;
 begin
-  LPathInfo := Req.RawWebRequest.PathInfo;
-  if LPathInfo = EmptyStr then
-    LPathInfo := '/';
-  if MatchRoute(LPathInfo, Config.SkipRoutes) then
+  if MatchText(Req.RawWebRequest.PathInfo, Config.SkipRoutes) then
   begin
     Next();
     Exit;
@@ -139,9 +136,9 @@ begin
     LBasicAuthenticationDecode.Delimiter := ':';
     LBasicAuthenticationDecode.StrictDelimiter := True;
     LBase64String := LBasicAuthenticationEncode.Trim.Replace(BASIC_AUTH, '', [rfIgnoreCase]);
-    LBasicAuthenticationDecode.DelimitedText := {$IF DEFINED(FPC)}DecodeStringBase64(LBase64String){$ELSE}TBase64Encoding.base64.Decode(LBase64String){$ENDIF};
 
     try
+      LBasicAuthenticationDecode.DelimitedText := {$IF DEFINED(FPC)}DecodeStringBase64(LBase64String){$ELSE}TBase64Encoding.base64.Decode(LBase64String){$ENDIF};
       if Assigned(AuthenticateWithResponse) then
       begin
         LIsAuthenticated := AuthenticateWithResponse(LBasicAuthenticationDecode.Strings[0], LBasicAuthenticationDecode.Strings[1], Res);
@@ -151,6 +148,11 @@ begin
         LIsAuthenticated := Authenticate(LBasicAuthenticationDecode.Strings[0], LBasicAuthenticationDecode.Strings[1]);
       end;
     except
+	  on E: EEncodingError do
+      begin
+        Res.Send('Base64 conversion error. Make sure that the Base64 string is correct.').Status(THTTPStatus.InternalServerError);
+        raise EHorseCallbackInterrupted.Create;
+      end;
       on E: exception do
       begin
         Res.Send(E.Message).Status(THTTPStatus.InternalServerError);
